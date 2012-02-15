@@ -1,0 +1,629 @@
+<?php
+
+/**
+ * @file
+ * Provides a SagePay Form payment method for Drupal Commerce.
+ */
+
+// SagePay transaction mode definitions.
+define('SAGEPAY_TXN_MODE_LIVE', 'live');
+define('SAGEPAY_TXN_MODE_TEST', 'live_test');
+define('SAGEPAY_TXN_MODE_SIMULATION', 'developer');
+
+define('SAGEPAY_SERVER_LIVE', 'https://live.sagepay.com/gateway/service/vspform-register.vsp');
+define('SAGEPAY_SERVER_TEST', 'https://test.sagepay.com/gateway/service/vspform-register.vsp');
+define('SAGEPAY_SERVER_SIMULATION', 'https://test.sagepay.com/Simulator/VSPFormGateway.asp');
+
+/**
+ * Implements hook_commerce_payment_method_info().
+ */
+function commerce_sagepay_form_commerce_payment_method_info() {
+  $payment_methods = array();
+
+  $payment_methods['commerce_sagepay_form'] = array(
+    'title' => t('Credit Card (via SagePay)'),
+    'description' => t('Integration with SagePay using Form method.'),
+    'active' => TRUE,
+    'offsite' => TRUE,
+    'active' => TRUE,
+    'callbacks' => array()
+  );
+
+  return $payment_methods;
+}
+
+/** 
+ * Settings form for SagePay payment method. Used to set vendor name and 
+ * secret key within Rules settings.
+ */
+function commerce_sagepay_form_settings_form($settings = NULL) {
+  $form = array();
+
+  // Merge default settings into the stored settings array.
+  $settings = (array) $settings + array(
+    'vendor' => '',
+    'enc_key' => '',
+    'order_description' => 'Your order from sitename.com',
+    'txn_mode' => SAGEPAY_TXN_MODE_TEST,
+    'txn_type' => COMMERCE_CREDIT_AUTH_CAPTURE,
+    'apply_avs_cv2' => '0',
+    'apply_3d_secure' => '0',
+    'vendor_email' => '',
+    'send_basket_contents' => '0',
+  );
+
+  $form['vendor'] = array(
+    '#type' => 'textfield',
+    '#title' => t('SagePay Vendor Name'),
+    '#description' => t('This is the vendor name that SagePay sent you when you set up your account.'),
+    '#default_value' => $settings['vendor'],
+    '#required' => TRUE,
+  );
+
+  $form['enc_key'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Encryption Key'),
+    '#description' => t('If you have requested form based integration, you will have received an encryption key from SagePay in a separate email.'),
+    '#default_value' => $settings['enc_key'],
+    '#required' => TRUE,
+  );
+  
+  $form['vendor_email'] = array(
+    '#type' => 'textfield',
+    '#title' => 'Vendor Email',
+    '#description' => 'An e-mail address on which you can be contacted when a transaction completes.',
+    '#default_value' => $settings['vendor_email'],
+  );
+  
+  $form['order_description'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Order Description'),
+    '#description' => t('The description of the order that will appear in the SagePay transaction. (eg Your Order from sitename.com)'),
+    '#default_value' => $settings['order_description'],
+    '#required' => TRUE,
+  );
+
+  $form['txn_mode'] = array(
+    '#type' => 'radios',
+    '#title' => t('Transaction mode'),
+    '#description' => t('Adjust to live transactions when you are ready to start processing actual payments.'),
+    '#options' => array(
+      SAGEPAY_TXN_MODE_LIVE => t('Live transactions in a live account'),
+      SAGEPAY_TXN_MODE_TEST => t('Test transactions in a test account'),
+      SAGEPAY_TXN_MODE_SIMULATION => t('Simulation Account'),
+    ),
+    '#default_value' => $settings['txn_mode'],
+  );
+  
+  $form['txn_type'] = array(
+    '#type' => 'radios',
+    '#title' => t('Default credit card transaction type'),
+    '#description' => t('The default will be used to process transactions during checkout.'),
+    '#options' => array(
+      COMMERCE_CREDIT_AUTH_CAPTURE => t('Authorisation and capture'),
+      COMMERCE_CREDIT_AUTH_ONLY => t('Authorisation only (requires manual or automated capture after checkout)'),
+    ),
+    '#default_value' => $settings['txn_type'],
+  );
+  
+  $form['apply_avs_cv2'] = array(
+    '#type' => 'radios',
+    '#title' => t('AVS / CV2 Mode'),
+    '#description' => t('CV2 validation mode used by default on all transactions.'),
+    '#options' => array(
+      '0' => t('If AVS/CV2 enabled then check them. If rules apply, use rules. (default)'),
+      '1' => t('Force AVS/CV2 checks even if not enabled for the account. If rules apply, use rules.'),
+      '2' => t('Force NO AVS/CV2 checks even if enabled on account.'),
+      '3' => t('Force AVS/CV2 checks even if not enabled for the account but DO NOT apply any rules.'),
+    ),
+    '#default_value' => $settings['apply_avs_cv2'],
+  );
+  
+  $form['apply_3d_secure'] = array(
+    '#type' => 'radios',
+    '#title' => t('3D Secure Mode'),
+    '#description' => t('3D Secure mode used by default on all transactions.'),
+    '#options' => array(
+      '0' => t('If 3D-Secure checks are possible and rules allow, perform the checks and apply the authorisation rules. (default)'),
+      '1' => t('Force 3D-Secure checks for this transaction if possible and apply rules for authorisation.'),
+      '2' => t('Do not perform 3D-Secure checks for this transaction and always authorise.'),
+      '3' => t('Force 3D-Secure checks for this transaction if possible but ALWAYS obtain an auth code, irrespective of rule base.'),
+    ), 
+    '#default_value' => $settings['apply_3d_secure'],
+  );
+  
+  $form['send_basket_contents'] = array(
+    '#type' => 'checkbox',
+    '#title' => 'Send cart contents to SagePay',
+    '#description' => 'Send the order lines to SagePay as well as the order total.',
+    '#default_value' => $settings['send_basket_contents'],
+  );
+  
+  return $form;
+}
+
+/**
+ * Implements hook_redirect_form.
+ **/
+function commerce_sagepay_form_redirect_form($form, &$form_state, $order, $payment_method) {
+  // Return an error if the enabling action's settings haven't been configured.
+  if (empty($payment_method['settings']['vendor'])) {
+    drupal_set_message(t('SagePay Form Integration is not configured for use. Vendor name has not been specified.'), 'error');
+    return array();
+  }
+
+  if (empty($payment_method['settings']['enc_key'])) {
+    drupal_set_message(t('SagePay Form Integration is not configured for use. Encryption key has not been specified.'), 'error');
+    return array();
+  }
+  
+  $settings = array(
+    // Return to the previous page when payment is canceled
+    'cancel_return' => url('checkout/' . $order->order_id . '/payment/back/' . $order->data['payment_redirect_key'], array('absolute' => TRUE)),
+
+    // Return to the payment redirect page for processing successful payments
+    'return' => url('checkout/' . $order->order_id . '/payment/return/' . $order->data['payment_redirect_key'], array('absolute' => TRUE)),
+
+    // Specify the current payment method instance ID in the notify_url
+    'payment_method' => $payment_method['instance_id'],
+  );
+
+  return commerce_sagepay_form_order_form($form, $form_state, $order, $payment_method['settings'] + $settings);
+  
+
+}
+
+function commerce_sagepay_form_order_form($form, &$form_state, $order, $settings) {
+  $wrapper = entity_metadata_wrapper('commerce_order', $order);
+  $total = commerce_line_items_total($wrapper->commerce_line_items);
+  
+  // Ensure a default value for the payment_method setting.
+  $settings += array('payment_method' => '');
+
+  // Load customer profile.
+  $profile = commerce_customer_profile_load($order->commerce_customer_billing[LANGUAGE_NONE][0]['profile_id']);
+  
+  // Get user billing address.
+  $address = $profile->commerce_customer_address[LANGUAGE_NONE][0];
+  
+  // Encrypt the order details (address and amount) ready to send to SagePay.
+  $encrypted_order = _commerce_sagepay_form_encrypted_order($settings, $order, $total, $address);
+  
+  // Determine the correct transaction type based on the payment gateway settings.
+  switch($settings['txn_type']){
+    case COMMERCE_CREDIT_AUTH_CAPTURE:
+      $txType = 'PAYMENT';
+      break;
+    case COMMERCE_CREDIT_AUTH_ONLY:
+      $txType = 'DEFERRED';
+      break;
+    default:
+      // Set to deferred by default if there is no setting for the payment gateway.
+      $txType = 'DEFERRED';   
+  }
+  
+  // Build the data array that will be translated into hidden form values.
+  $data = array(
+    'VPSProtocol' => '2.23',
+    'TxType' => $txType,
+    'Vendor' => $settings['vendor'],
+    'Crypt' => $encrypted_order,
+  );
+  
+  // determine the correct url based on the transaction mode.
+  switch ($settings['txn_mode']) {
+    case SAGEPAY_TXN_MODE_LIVE:
+      $server_url = SAGEPAY_SERVER_LIVE;
+   break;
+   case SAGEPAY_TXN_MODE_TEST:
+      $server_url = SAGEPAY_SERVER_TEST;
+   break;
+     
+   case SAGEPAY_TXN_MODE_SIMULATION:
+    $server_url = SAGEPAY_SERVER_SIMULATION;
+   break;
+  
+  }
+  
+  $form['#action'] = $server_url;
+
+  foreach ($data as $name => $value) {
+    if (!empty($value)) {
+      $form[$name] = array('#type' => 'hidden', '#value' => $value);
+    }
+  }
+
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Proceed to SagePay'),
+  );
+
+  return $form;
+}
+
+
+
+/**
+ * Implements hook_redirect_form_validate
+ */
+function commerce_sagepay_form_redirect_form_validate($order, $payment_method){
+  // SagePay sends a callback to the site as a single encrypted string called Crypt
+  // this is appened to the success or failure URL.
+  $encrypted_response = $_GET['crypt'];
+  
+  // Now we have the encrypted response, we need to decrypt this using the same
+  // secret key that we used to send the request in the first place. 
+  // The secret key is stored in the payment method.
+  $enc_key = $payment_method['settings']['enc_key'];
+  if (!isset($enc_key)) {
+  	watchdog('commerce_sagepay_form', t('Cannot load SagePay key from payment method in order to decrypt response'), array(), WATCHDOG_ERROR);
+  	return FALSE;
+  }
+  
+  // Decrypt the response received from SagePay.
+  $unencrypted_response = _commerce_sagepay_form_simple_xor(_commerce_sagepay_form_base64Decode($encrypted_response), $enc_key);
+  
+  // The response we get back will have the following tokens available:
+  // Status = a String containing the status of the transaction from the possible values:
+    // ABORT, NOTAUTHED, REJECTED, MALFORMED, INVALID, ERROR, OK, AUTHENTICATED, REGISTERED
+  
+  // StatusDetail = Human-readable text providing extra detail for the Status message
+  
+  // VendorTxCode = The order ID we send with the original request. This can be used to apply this transaction back to the order.
+  
+  // VPSTxId = The unique transaction ID created by SagePay
+  
+  // TxAuthNo = The transaction authorisation number
+  
+  // Amount = The amount that was taken in the payment (this should match the amount requested and can be used to verify the call back)
+  
+  // AVSCV2 = The result of the card AVSCV2 security check 
+  // This will be one of ALL MATCH, SECURITY CODE MATCH ONLY, ADDRESS MATCH ONLY, NO DATA MATCHES or DATA NOT CHECKED
+  
+  // AddressResult = The result of the address check (comparing the card address entered by the user to the one on the credit card record at the provider) 
+  // This will be one of: NOTPROVIDED, NOTCHECKED, MATCHED, NOTMATCHED  
+  
+  // PostCodeResult = The result of the postcode check (comparing the card address postcode entered by the user to the one on the credit card record at the provider) 
+  // This will be one of NOTPROVIDED, NOTCHECKED, MATCHED, NOTMATCHED
+  
+  // CV2Result = The results of the CV2 security check 
+  // This will be one off NOTPROVIDED, NOTCHECKED, MATCHED, NOTMATCHED
+  
+  // GiftAid = Whether or not the user specified Gift Aid during the transaction (charity payments only) 
+  // This will be either: 0 = The Gift Aid box was not checked this transaction. 1 = The user checked the Gift Aid box on the payment page
+  
+  // 3DSecureStatus: This will be one of:
+  // OK - 3D Secure checks carried out and user authenticated correctly.
+  // NOTCHECKED â 3D-Secure checks were not performed. NOTAVAILABLE â€“ The card used was either not part of the
+  // 3D Secure Scheme, or the authorisation was not possible.
+  // NOTAUTHED â3D-Secure authentication checked, but the user failed the authentication.
+  // INCOMPLETE â3D-Secure authentication was unable to complete. No authentication occurred.
+  // ERROR - Authentication could not be attempted due to data errors or service unavailability in one of the parties involved in the check.
+  
+  // CAVV = The encoded result code from the 3D-Secure checks (CAVV or UCAF)."CAVV" - Only present if the 3DSecureStatus is OK
+  
+  // CardType =  The card type used to complete the transaction. This will be one of: 
+  // VISA, MC, DELTA, SOLO, MAESTRO, UKE, AMEX, DC, JCB, LASER, PAYPAL
+
+  // Last4Digits = The last 4 digits of the card number used in this transaction. PayPal transactions have 0000
+
+  // Split the decrypted string into an array of tokens.
+  $tokens = _commerce_sagepay_form_get_tokens($unencrypted_response);
+
+  // Split the vendor code to get rid of the random number that was added to the end before sending.
+  $arrtmp = explode('_', $tokens['VendorTxCode']);
+  $order_id = $arrtmp[0];
+  
+  
+  // Validate the returned decrypted data 
+  if ($order_id != $order->order_id) {
+  	watchdog('commerce_sagepay_form', t('Returned order id does not match order for this session'), array(), WATCHDOG_ERROR);
+  	return FALSE;
+  }
+  
+  // Check for a valid status callback.
+  switch ($tokens['Status']) {
+      case 'ABORT' : 
+        watchdog('commerce_sagepay', 'ABORT error from SagePay for order %order_id', array('%order_id'=> $order_id), WATCHDOG_ALERT);
+        commerce_sagepay_form_transaction($payment_method, $order, array(), $tokens, COMMERCE_PAYMENT_STATUS_FAILURE);
+        return FALSE;
+      case 'NOTAUTHED' : 
+        watchdog('commerce_sagepay', 'NOTAUTHED error from SagePay for order %order_id', array('%order_id'=> $order_id), WATCHDOG_ALERT);
+        commerce_sagepay_form_transaction($payment_method, $order, array(), $tokens, COMMERCE_PAYMENT_STATUS_FAILURE);
+        return FALSE;
+      case 'REJECTED' : 
+        watchdog('commerce_sagepay', 'REJECTED error from SagePay for order %order_id', array('%order_id'=> $order_id), WATCHDOG_ALERT);
+        commerce_sagepay_form_transaction($payment_method, $order, array(), $tokens, COMMERCE_PAYMENT_STATUS_FAILURE);
+        return FALSE;
+      case 'MALFORMED' :
+        watchdog('commerce_sagepay', 'MALFORMED error from SagePay for order %order_id', array('%order_id'=> $order_id), WATCHDOG_ALERT);
+        commerce_sagepay_form_transaction($payment_method, $order, array(), $tokens, COMMERCE_PAYMENT_STATUS_FAILURE);
+        return FALSE;
+      case 'INVALID' : 
+        watchdog('commerce_sagepay', 'INVALID error from SagePay for order %order_id', array('%order_id'=> $order_id), WATCHDOG_ERROR);
+        commerce_sagepay_form_transaction($payment_method, $order, array(), $tokens, COMMERCE_PAYMENT_STATUS_FAILURE);
+        return FALSE;
+      case 'ERROR' :
+        watchdog('commerce_sagepay', 'System ERROR from SagePay for order %order_id', array('%order_id'=> $order_id), WATCHDOG_ERROR);
+        commerce_sagepay_form_transaction($payment_method, $order, array(), $tokens, COMMERCE_PAYMENT_STATUS_FAILURE);
+        return FALSE;
+      case 'OK' :
+        watchdog('commerce_sagepay', 'OK Payment callback received from SagePay for order %order_id with status code %status', array('%order_id'=> $order_id, '%status'=>$tokens['Status']));
+        break;
+      case 'AUTHENTICATED' :
+        watchdog('commerce_sagepay', 'AUTHENTICATED Payment callback received from SagePay for order %order_id with status code %status', array('%order_id'=> $order_id, '%status'=>$tokens['Status']));
+        break;
+      case 'REGISTERED' :
+        watchdog('commerce_sagepay', 'REGISTERED Payment callback received from SagePay for order %order_id with status code %status', array('%order_id'=> $order_id, '%status'=>$tokens['Status']));
+        break;
+      
+      default: 
+        // If the status code is anything other than those above, something has gone wrong so log an error and fail.
+        watchdog('commerce_sagepay', 'Unrecognised Status response from SagePay for order %order_id (%response_code)', array('%order_id' => $order_id, '%response_code' => $tokens['Status']), WATCHDOG_ERROR);
+        return FALSE;
+
+    }
+    
+  // Validation successful.
+  // Create a transaction and associate it with the order.
+   $arr_charge = array();
+   $arr_charge['amount'] = $tokens['Amount'] * 100; // convert back to commerce int
+   $arr_charge['currency_code'] = $order->commerce_order_total['und'][0]['currency_code']; 
+   
+   switch ($tokens['Status']) {
+     case 'OK':
+       commerce_sagepay_form_transaction($payment_method, $order, $arr_charge, $tokens, COMMERCE_PAYMENT_STATUS_SUCCESS);
+       break;
+     default: 
+       commerce_sagepay_form_transaction($payment_method, $order, $arr_charge, $tokens, COMMERCE_PAYMENT_STATUS_PENDING);
+   }     
+  
+  return TRUE;
+}
+
+
+
+/** 
+ * Create a transaction and associate it with an order
+ */
+function commerce_sagepay_form_transaction($payment_method, $order, $charge = array('amount' => 0, 'currency_code' => ''), $tokens, $transaction_status) {
+  
+  $transaction = commerce_payment_transaction_new('commerce_sagepay', $order->order_id);
+  $transaction->instance_id = $payment_method['instance_id'];
+  $transaction->amount = $charge['amount'];
+  $transaction->currency_code = $charge['currency_code'];
+  
+  // set a status for the payment - one of COMMERCE_PAYMENT_STATUS_SUCCESS, COMMERCE_PAYMENT_STATUS_PENDING or COMMERCE_PAYMENT_STATUS_FAILURE
+  $transaction->status = $transaction_status;
+  $transaction->message = 'Status @status, @statusdetail. VPSTxId=@vpstxid. Auth Code=@authcode. Address Check: @address. Postcode Check: @postcode. AVSCV2 Result: @avs. 3D Secure: @tds';
+  $transaction->message_variables = 
+    array(
+      '@status' => $tokens['Status'], 
+      '@statusdetail' => $tokens['StatusDetail'], 
+      '@vpstxid' => $tokens['VPSTxId'], 
+      '@authcode' => $tokens['TxAuthNo'], 
+      '@address' => $tokens['AddressResult'], 
+      '@postcode' => $tokens['PostCodeResult'], 
+      '@avs' => $tokens['AVSCV2'], 
+      '@tds' => $tokens['3DSecureStatus'], 
+    );
+  commerce_payment_transaction_save($transaction);
+
+}
+
+
+/**
+ * Encrypt the order details ready to send to SagePay Server 
+ **/
+function _commerce_sagepay_form_encrypted_order($settings, $order, $total, $address) {
+
+  // add a random number to the transaction ID so that the order can be resubmitted to SagePage in the 
+  // event the user clicks back to modify the order before completing. (otherwise we SagePay rejects this
+  // as a duplicate)
+  $intRandNum = rand(0, 32000) * rand(0, 32000);
+  $strVendorTxCode = $order->order_id . "_" . $intRandNum;  
+  // set up an array of tokens to encrypt ready for SagePay
+  // note we append the redirect key from generated by commerce_payment_checkout.module
+  // so we can get the correct order on callback
+  
+  $redirect_key = $order->data['payment_redirect_key'];
+  
+  // convert commerce int to decimal
+  $order_amount = $total['amount'] / 100;
+  
+  // Check if we need to encoded cart.
+  $encoded_cart = '';
+  if ($settings['send_basket_contents'] == '1'){
+    $encoded_cart = _commerce_sagepay_form_cart_to_string($order);
+  }
+  
+  $query = array(
+    'VendorTxCode' => $strVendorTxCode,
+    'Amount' => $order_amount,
+    'Currency' => $total['currency_code'],
+    'Description' => $settings['order_description'],
+    'SuccessURL' => $settings['return'],
+    'FailureURL' => $settings['cancel_return'],
+    'CustomerName' => $address['first_name'] . " " . $address['last_name'],
+    'CustomerEmail' => $order->mail,
+    'VendorEmail' => $settings['vendor_email'], 
+    // 'SendEmail' => '',
+    'eMailMessage' => '',
+    'BillingSurname' => $address['last_name'],
+    'BillingFirstnames' => $address['first_name'],
+    'BillingAddress1' => $address['thoroughfare'],
+    'BillingAddress2' => $address['premise'],
+    'BillingCity' => $address['locality'],
+    'BillingPostcode' => $address['postal_code'],
+    'BillingCountry' => $address['country'],
+    // 'BillingState' => $address[''],
+    // 'BillingPhone' => $address['postal_code'],
+    'DeliverySurname' => $address['last_name'],
+    'DeliveryFirstnames' => $address['first_name'],
+    'DeliveryAddress1' => $address['thoroughfare'],
+    'DeliveryAddress2' => $address['premise'],
+    'DeliveryCity' => $address['locality'],
+    'DeliveryPostcode' => $address['postal_code'],
+    'DeliveryCountry' => $address['country'],
+    // 'DeliveryState' => $address[''],
+    // 'DeliveryPhone' => $address[''],
+    'Basket' => $encoded_cart,
+    // 'AllowGiftAid' => '',
+    'ApplyAVSCV2' => $settings['apply_avs_cv2'],
+    'Apply3DSecure' => $settings['apply_3d_secure'],
+    // 'BillingAgreement' => '',
+    
+  );
+
+  $keys = array_keys($query);
+  $query_string = '';
+  foreach($keys as $key){
+    $query_string .= $key . '=' . $query[$key] . '&';
+  }
+  $query_string = substr($query_string, 0, strlen($query_string) -1);
+
+  // Encrypt the order details using base64 and the secret key from the settings.
+  return base64_encode(_commerce_sagepay_form_simple_xor($query_string, $settings['enc_key']));  
+}
+
+function _commerce_sagepay_form_base64Decode($scrambled) {
+   $output = "";
+   $corrected = str_replace(" ", "+", $scrambled);
+   $output = base64_decode($corrected);
+   return $output;
+ }
+
+function _commerce_sagepay_form_simple_xor($InString, $Key) {
+  // Initialise key array.
+  $KeyList = array();
+  // Initialise out variable.
+  $output = "";
+  
+  // Convert $Key into array of ASCII values.
+  for ($i = 0; $i < strlen($Key); $i++) {
+    $KeyList[$i] = ord(substr($Key, $i, 1));
+  }
+
+  // Step through string a character at a time.
+  for ($i = 0; $i < strlen($InString); $i++) {
+    // Get ASCII code from string, get ASCII code from key (loop through with MOD), XOR the two, get the character from the result
+    // % is MOD (modulus), ^ is XOR.
+    $output .= chr(ord(substr($InString, $i, 1)) ^ ($KeyList[$i % strlen($Key)]));
+  }
+  return $output;
+}
+
+function _commerce_sagepay_form_get_tokens($tokenizedstring) {
+
+  // List the possible tokens.
+  $tokens = array(
+    'Status',
+    'StatusDetail',
+    'VendorTxCode',
+    'VPSTxId',
+    'TxAuthNo',
+    'Amount',
+    'AVSCV2', 
+    'AddressResult', 
+    'PostCodeResult', 
+    'CV2Result', 
+    'GiftAid', 
+    '3DSecureStatus', 
+    'CAVV',
+    'AddressStatus',
+    'PayerStatus',
+    'CardType',
+    'Last4Digits',
+  );
+
+  // Initialise arrays.
+  $output = array();
+  $result = array();
+  
+  // Get the next token in the sequence.
+  for ($i = count($tokens)-1; $i >= 0 ; $i--) {
+    // Find the position in the string.
+    $start = strpos($tokenizedstring, $tokens[$i]);
+  // If it's present
+    if ($start !== FALSE) {
+      // Record position and token name.
+      $result[$i]->start = $start;
+      $result[$i]->token = $tokens[$i];
+    }
+  }
+  
+  // Sort in order of position.
+  sort($result);
+  
+  // Go through the result array, getting the token values.
+  for ($i = 0; $i<count($result); $i++) {
+    // Get the start point of the value.
+    $valueStart = $result[$i]->start + strlen($result[$i]->token) + 1;
+  // Get the length of the value.
+    if ($i==(count($result)-1)) {
+      $output[$result[$i]->token] = substr($tokenizedstring, $valueStart);
+    } 
+    else {
+      $valueLength = $result[$i+1]->start - $result[$i]->start - strlen($result[$i]->token) - 2;
+      $output[$result[$i]->token] = substr($tokenizedstring, $valueStart, $valueLength);
+    }      
+
+  }
+
+  // Return the ouput array.
+  return $output;
+}
+
+/** 
+ * Convert a commerce order to a string in a format suitable to
+ * send to SagePay.
+ */
+function _commerce_sagepay_form_cart_to_string($order){
+  $order_string = '';
+  
+  // Load an array of line items from the order.
+  $order_lines = $order->commerce_line_items['und'];
+  
+  // Determine the total number of lines - this is the first component of the string we send to SagePay.
+  $total_lines = sizeof($order_lines);
+  $order_string = $total_lines . ':';
+  
+  // Encode each order line and add to the string.
+  for ($line = 0; $line < $total_lines; $line++){
+    $order_string .= _commerce_sagepay_form_line_item_to_string($order_lines[$line]['line_item_id']);
+  }
+  
+  // Trim off the last excess colon
+  $order_string = substr($order_string, 0, strlen($order_string) -1);
+  
+  return $order_string;
+}
+
+/**
+ * Convert a commerce line item to a string in a format suitable to 
+ * send to SagePay.
+ */
+function _commerce_sagepay_form_line_item_to_string($line_item_id){
+  
+  // Load the line item ID
+  $line_item = commerce_line_item_load($line_item_id);
+  
+  $description = $line_item->line_item_label;
+  
+  // remove any colons from the line description as we need this as a delimiter.
+  $description = str_ireplace(':', ' ', $description);
+  
+  $quantity = $line_item->quantity;
+  
+  // Get the price components for the order line.  
+  $item_value = $line_item->commerce_unit_price['und'][0]['data']['components'][0]['price']['amount'] / 100;
+  if (isset($line_item->commerce_unit_price['und'][0]['data']['components'][1])) {
+    $item_tax = $line_item->commerce_unit_price['und'][0]['data']['components'][1]['price']['amount'] / 100;
+  } else {
+    $item_tax = '---';
+  }
+  $item_total = $line_item->commerce_unit_price['und'][0]['amount'] / 100;
+  $line_total = $line_item->commerce_total['und'][0]['amount'] / 100;
+  
+  return $description . ':' . $quantity . ':' . $item_value . ':' . $item_tax . ':' . $item_total . ':' . $line_total . ':';
+}
