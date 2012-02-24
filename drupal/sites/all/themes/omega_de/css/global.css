@@ -1,0 +1,46 @@
+/* This file will hold the main styles for your website. */
+/* change background-color */
+body {
+  color:#ffffff;
+  background-color:#231f20;
+  /* background-color:black; */
+}
+/* show active links on dark background */
+li a.active {
+  color:white;
+}
+a:hover {
+  color:white;
+}
+/* hide default logo, site name, site slogan */
+#region-branding img, #region-branding h1, #region-branding h2 {
+  display:none;
+}
+/* hide default main menu */
+#main-menu {
+  display:none;
+}
+/* hide secondary menu */
+#secondary-menu {
+  display:none;
+}
+/* hide breadcrumb */
+#breadcrumb {
+  display:none;
+}
+/* language switcher dropdown
+ * comes from lang_dropdown module
+ */
+#edit-lang-dropdown-select_titletext {
+  color:black;
+}
+/* style the language switcher */
+#block-locale-language li {
+  padding-left:10px;
+  float:right;
+  list-style:none;
+}
+/* space after each item in view-latest-issues */
+div.view-latest-issues .field-content {
+  padding-bottom:20px;
+}
