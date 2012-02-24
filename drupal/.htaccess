@@ -32,6 +32,10 @@ DirectoryIndex index.php index.html index.htm
   php_value mbstring.http_input             pass
   php_value mbstring.http_output            pass
   php_flag mbstring.encoding_translation    off
+  # ML here are my own php.ini settings
+  # http://eureka.ykyuen.info/2011/02/27/drupal-override-the-php-ini/
+  php_value upload_max_filesize             32M
+  php_value post_max_size                   32M  
 </IfModule>
 
 # Requires mod_expires to be enabled.
