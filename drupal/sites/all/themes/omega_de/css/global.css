@@ -48,13 +48,13 @@ div.view-latest-issues .field-content {
 /* block-1 is the left-side-menu */
 #block-block-1 a:link {color:white;text-decoration:none}
 #block-block-1 a:visited {color:white;text-decoration:none}
-#block-block-1 a:hover {color:white;text-decoration:none;}
+#block-block-1 a:hover {color:white;text-decoration:underline;}
 #block-block-1 a:active {color:white;text-decoration:none}
 #block-block-1 h2 {font-weight:bold;}
 
 /* block-2 is the right-side-menu */
 #block-block-2 a:link {color:white;text-decoration:none}
 #block-block-2 a:visited {color:white;text-decoration:none}
-#block-block-2 a:hover {color:white;text-decoration:none;}
+#block-block-2 a:hover {color:white;text-decoration:underline;}
 #block-block-2 a:active {color:white;text-decoration:none}
 
