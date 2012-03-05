@@ -10,3 +10,6 @@
  * for your subtheme grows. Please read the README.txt in the /preprocess and /process subfolders
  * for more information on this topic.
  */
+function omega_preprocess_page(&$variables) {
+  drupal_add_js('sites/all/themes/omega_de/js/omega_de.js');
+}
