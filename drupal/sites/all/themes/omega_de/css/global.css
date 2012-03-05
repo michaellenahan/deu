@@ -1,6 +1,13 @@
 /* This file will hold the main styles for your website. */
+/* hide page-title for the front page */
 .front #page-title {
   display:none;
+}
+/* sans-serif font for other page titles */
+#page-title {
+  font-family:futura,sans-serif;
+  /* default font-size is 36px */
+  /*font-size:24px;*/
 }
 /* change background-color */
 body {
