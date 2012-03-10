@@ -1,0 +1,15 @@
+<?php
+
+/**
+ * Code from http://steindom.com/articles/making-toolbar-and-administration-menu-co-exist-drupal-7
+ * All credit to Joel Stein I just wrapped it in a module for easy use for those not ready to make their own.
+ *
+ * Implements hook_page_alter().
+ */
+function toolbar_hide_page_alter(&$page) {
+  // Hide Toolbar for those who can access the Admin Menu.
+  if (user_access('access administration menu') && !empty($page['page_top']['toolbar'])) {
+    $page['page_top']['toolbar']['#access'] = FALSE;
+  }
+}
+

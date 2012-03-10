@@ -1,0 +1,5 @@
+name = Toolbar Hide
+description = Hides Drupal core toolbar and shows Admin Menu.
+core = 7.x
+dependencies[] = admin_menu
+package = Custom
