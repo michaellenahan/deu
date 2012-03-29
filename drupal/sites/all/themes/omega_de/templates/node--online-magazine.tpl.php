@@ -1,6 +1,8 @@
+<!-- $swf_path variable stores the location of the swf file to be used in: -->
+<!-- swfobject.embedSWF() below. -->
 <?php $swf_uri = $node->field_swf_file['und'][0]['uri']; ?>
 <?php $swf_path = str_replace('private://', '/system/files/', $swf_uri); ?>
-<?php echo $swf_path; ?>
+
 <article<?php print $attributes; ?>>
   <?php print $user_picture; ?>
   <?php print render($title_prefix); ?>
