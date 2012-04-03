@@ -6,6 +6,7 @@
  */
 function bulk_product_creation_defaults_form_commerce_bpc_create_bulk_form_alter(&$form, &$form_state, $form_id) {
   // TODO: This should be user-configurable
+  $product = "de-en";
   // Maybe we could get the price from the last product (sku=issue-000-digital)
   $default_price = '3.95';
   // TODO: Month and year blank while entering legacy data
@@ -29,14 +30,14 @@ function bulk_product_creation_defaults_form_commerce_bpc_create_bulk_form_alter
   foreach ($products as $product) {
     $sku = $product->sku;
     // We are expecting something like:
-    // issue-17-digital-eu
+    // de-en-17-digital-eu
     $sku_parts = explode('-', $sku);
-    if (is_numeric($sku_parts[1])) {
-      $next_number = $sku_parts[1] + 1;
+    if (is_numeric($sku_parts[2])) {
+      $next_number = $sku_parts[2] + 1;
       $issue_number = sprintf("%03d", $next_number);
     }
   }
-  $form['product']['sku_fragment']['#default_value'] = "issue-$issue_number";
+  $form['product']['sku_fragment']['#default_value'] = "$product-$issue_number";
   $form['product']['commerce_price']['und']['0']['amount']['#default_value'] = $default_price;
   $form['product']['title_fragment']['#default_value'] = "Issue #$issue_number $month $year";
   $form['combinations']['field_product_options']['und']['#default_value'] = array('digital', 'print', 'combo');
