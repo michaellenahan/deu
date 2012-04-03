@@ -46,7 +46,6 @@ a:hover {
 }
 /* style the language switcher */
 #block-locale-language li {
-  padding-left:10px;
   float:right;
   list-style:none;
 }
