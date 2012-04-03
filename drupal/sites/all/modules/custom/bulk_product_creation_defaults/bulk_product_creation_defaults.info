@@ -1,0 +1,4 @@
+name = Bulk Product Creation defaults
+description = Bulk Product Creation defaults
+core = 7.x
+package = Custom
