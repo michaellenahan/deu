@@ -5,10 +5,12 @@
  * Provides some defaults for bulk product creation
  */
 function bulk_product_creation_defaults_form_commerce_bpc_create_bulk_form_alter(&$form, &$form_state, $form_id) {
+dpm($form);
   // TODO: This should be user-configurable
   $product_name = "de-en";
   // Maybe we could get the price from the last product (sku=issue-000-digital)
   $default_price = '3.95';
+  $default_price_eur = '5.50';
   // TODO: Month and year blank while entering legacy data
   //$month = date('F');
   $month = '';
@@ -41,6 +43,8 @@ function bulk_product_creation_defaults_form_commerce_bpc_create_bulk_form_alter
   }
   $form['product']['sku_fragment']['#default_value'] = "$product_name-$issue_number";
   $form['product']['commerce_price']['und']['0']['amount']['#default_value'] = $default_price;
+  $form['product']['commerce_price_gbp']['und']['0']['amount']['#default_value'] = $default_price;
+  $form['product']['commerce_price_eur']['und']['0']['amount']['#default_value'] = $default_price_eur;
   $form['product']['title_fragment']['#default_value'] = "Issue #$issue_number $month $year";
   $form['combinations']['field_product_options']['und']['#default_value'] = array('digital', 'print', 'combo');
   $form['combinations']['field_postal_delivery']['und']['#default_value'] = array('uk', 'eu', 'world');
