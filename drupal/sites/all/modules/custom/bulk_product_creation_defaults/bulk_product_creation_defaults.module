@@ -5,7 +5,6 @@
  * Provides some defaults for bulk product creation
  */
 function bulk_product_creation_defaults_form_commerce_bpc_create_bulk_form_alter(&$form, &$form_state, $form_id) {
-dpm($form);
   // TODO: This should be user-configurable
   $product_name = "de-en";
   // Maybe we could get the price from the last product (sku=issue-000-digital)
