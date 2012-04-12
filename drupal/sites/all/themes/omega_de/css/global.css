@@ -15,13 +15,6 @@ body {
   background-color:#231f20;
   /* background-color:black; */
 }
-/* show active links on dark background */
-li a.active {
-  color:white;
-}
-a:hover {
-  color:white;
-}
 /* hide default logo, site name, site slogan */
 #region-branding img, #region-branding h1, #region-branding h2 {
   display:none;
