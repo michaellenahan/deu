@@ -6,6 +6,10 @@
   display: none;
 }
 
+.commerce-product-field-commerce-price {
+  font-size:1.429em; /* same as h2 */
+}
+
 /* Remove items from main menu display */
 
 /* Auditions/Jobs */
