@@ -10,6 +10,10 @@
   font-size:1.429em; /* same as h2 */
 }
 
+.node-product-display .field-name-field-image img {
+  float:right;
+}
+
 /* Remove items from main menu display */
 
 /* Auditions/Jobs */
