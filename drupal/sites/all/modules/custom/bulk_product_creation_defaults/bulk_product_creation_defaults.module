@@ -5,8 +5,22 @@
  * Provides some defaults for bulk product creation
  */
 function bulk_product_creation_defaults_form_commerce_bpc_create_bulk_form_alter(&$form, &$form_state, $form_id) {
-  // TODO: This should be user-configurable
-  $product_name = "de-en";
+  $product_type = $form['product_type']['#value'];
+  switch ($product_type) {
+    case 'product':
+      $product_name = 'de-en';
+      $prefix = 'Issue #';
+      break;
+    case 'magazine_spanish_':
+      $product_name = 'de-es';
+      $prefix = 'Edición Nº ';
+      break;
+    default:
+      break;
+  }
+  if (empty($product_name)) {
+    return;
+  }
   // Maybe we could get the price from the last product (sku=issue-000-digital)
   $default_price = '3.95';
   $default_price_eur = '5.50';
@@ -16,37 +30,45 @@ function bulk_product_creation_defaults_form_commerce_bpc_create_bulk_form_alter
   //$year = date('Y');
   $year = '';
   // get latest magazine issue number
-  $issue_number = '000';
+  $issue_number_padded = '000';
   $query = new EntityFieldQuery();
   $query
     ->entityCondition('entity_type', 'commerce_product')
-    ->entityCondition('bundle', 'product')
+    ->entityCondition('bundle', 'magazine_spanish_')
     ->propertyOrderBy('created', 'DESC')
     ->range(0, 1); // return first result only
   $result = $query->execute();
 
   // We are only expecting one product, but entity_load gives us an array
   // (which we expect will only have one element).
-  $products = entity_load('commerce_product', array_keys($result['commerce_product']));
-  foreach ($products as $product) {
-    $sku = $product->sku;
-    // We are expecting something like:
-    // de-en-17-digital-eu
-    $sku_parts = explode('-', $sku);
-    if (isset($sku_parts[2])) {
-      if (is_numeric($sku_parts[2])) {
-        $next_number = $sku_parts[2] + 1;
-        $issue_number = sprintf("%03d", $next_number);
+  if ($result) {
+    $products = entity_load('commerce_product', array_keys($result['commerce_product']));
+    foreach ($products as $product) {
+      $sku = $product->sku;
+      // We are expecting something like:
+      // de-en-17-digital-eu
+      $sku_parts = explode('-', $sku);
+      if (isset($sku_parts[2])) {
+        if (is_numeric($sku_parts[2])) {
+          $issue_number = $sku_parts[2] + 1;
+          $issue_number_padded = sprintf("%03d", $issue_number);
+        }
       }
     }
   }
-  $form['product']['sku_fragment']['#default_value'] = "$product_name-$issue_number";
+
+  $form['product']['sku_fragment']['#default_value'] = "$product_name-$issue_number_padded";
   $form['product']['commerce_price']['und']['0']['amount']['#default_value'] = $default_price;
   $form['product']['commerce_price_gbp']['und']['0']['amount']['#default_value'] = $default_price;
   $form['product']['commerce_price_eur']['und']['0']['amount']['#default_value'] = $default_price_eur;
-  $form['product']['title_fragment']['#default_value'] = "Issue #$issue_number $month $year";
+  $form['product']['title_fragment']['#default_value'] = "{$prefix}$issue_number_padded $month $year";  
+
   $form['combinations']['field_product_options']['und']['#default_value'] = array('digital', 'print', 'combo');
   $form['combinations']['field_postal_delivery']['und']['#default_value'] = array('uk', 'eu', 'world');
+  
+  $form['combinations']['field_product_options_es']['und']['#default_value'] = array('digital', 'print', 'combo');
+  $form['combinations']['field_postal_delivery_es']['und']['#default_value'] = array('uk', 'eu', 'world');
+  
   $form['submit']['#disabled'] = TRUE;
 }
 
