@@ -31,6 +31,15 @@ body {
 #breadcrumb {
   display:none;
 }
+/* full width for central image 
+ * this prevents the right-sidebar bleeding over the central image
+ */
+.front #region-content {
+  width:580px;
+}
+.front aside .grid-3 {
+  width:280px;
+}
 /* language switcher dropdown
  * comes from lang_dropdown module
  */
