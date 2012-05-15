@@ -56,6 +56,14 @@ div.view-latest-issues .field-content {
   padding-bottom:20px;
 }
 
+a:link {color:white;text-decoration:underline}
+a:visited {color:white;text-decoration:none}
+a:hover {color:white;text-decoration:underline;}
+a:active {color:white;text-decoration:none}
+
+/* On front page, we want white links with no underlines.
+ */
+
 /* block-1 is the english-language left-side-menu */
 #block-block-1 a:link {color:white;text-decoration:none}
 #block-block-1 a:visited {color:white;text-decoration:none}
