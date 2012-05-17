@@ -1,0 +1,7 @@
+<?php
+/**
+ * @file
+ * Code for the feature_omega_de feature.
+ */
+
+include_once('feature_omega_de.features.inc');
