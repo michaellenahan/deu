@@ -5,6 +5,7 @@
  * Provides some defaults for bulk product creation
  */
 function bulk_product_creation_defaults_form_commerce_bpc_create_bulk_form_alter(&$form, &$form_state, $form_id) {
+  dpm($form);
   $product_type = $form['product_type']['#value'];
   switch ($product_type) {
     case 'product':
@@ -34,7 +35,7 @@ function bulk_product_creation_defaults_form_commerce_bpc_create_bulk_form_alter
   $query = new EntityFieldQuery();
   $query
     ->entityCondition('entity_type', 'commerce_product')
-    ->entityCondition('bundle', 'magazine_spanish_')
+    ->entityCondition('bundle', $product_type)
     ->propertyOrderBy('created', 'DESC')
     ->range(0, 1); // return first result only
   $result = $query->execute();
