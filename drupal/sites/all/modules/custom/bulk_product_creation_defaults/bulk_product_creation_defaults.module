@@ -5,7 +5,6 @@
  * Provides some defaults for bulk product creation
  */
 function bulk_product_creation_defaults_form_commerce_bpc_create_bulk_form_alter(&$form, &$form_state, $form_id) {
-  dpm($form);
   $product_type = $form['product_type']['#value'];
   switch ($product_type) {
     case 'product':
