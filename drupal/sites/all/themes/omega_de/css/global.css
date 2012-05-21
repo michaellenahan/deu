@@ -93,3 +93,25 @@ a:active {color:white;text-decoration:none}
   font-size:10px;
   font-family:sans-serif;
 }
+
+/* picture box blocks */
+/* top-left 251 */
+#block-nodeblock-251 {
+  float:left;
+  margin-top:20px;
+  padding-top:10px;
+  border-top:2px solid white;
+}
+#block-nodeblock-251 .block-title {
+  display:none;
+}
+/* top-right 252 */
+#block-nodeblock-252 {
+  float:right;
+  margin-top:20px;
+  padding-top:10px;
+  border-top:2px solid white;
+}
+#block-nodeblock-252 .block-title {
+  display:none;
+}
