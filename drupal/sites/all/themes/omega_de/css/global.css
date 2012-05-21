@@ -105,6 +105,10 @@ a:active {color:white;text-decoration:none}
 #block-nodeblock-251 .block-title {
   display:none;
 }
+/* hide translation link */
+#block-nodeblock-251 ul .links {
+  display:none;
+}
 /* top-right 252 */
 #block-nodeblock-252 {
   float:right;
