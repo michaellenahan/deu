@@ -106,7 +106,7 @@ a:active {color:white;text-decoration:none}
   display:none;
 }
 /* hide translation link */
-#block-nodeblock-251 ul .links {
+#block-nodeblock-251 ul.links {
   display:none;
 }
 /* top-right 252 */
