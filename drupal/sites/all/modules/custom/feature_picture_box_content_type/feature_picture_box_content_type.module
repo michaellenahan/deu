@@ -1,0 +1,7 @@
+<?php
+/**
+ * @file
+ * Code for the Feature: picture box content type feature.
+ */
+
+include_once('feature_picture_box_content_type.features.inc');
