@@ -98,6 +98,7 @@ a:active {color:white;text-decoration:none}
 /* top-left 251 */
 #block-nodeblock-251 {
   float:left;
+  width:280px;
   margin-top:20px;
   padding-top:10px;
   border-top:2px solid white;
@@ -112,6 +113,7 @@ a:active {color:white;text-decoration:none}
 /* top-right 253 */
 #block-nodeblock-253 {
   float:right;
+  width:280px;
   margin-top:20px;
   padding-top:10px;
   border-top:2px solid white;
@@ -126,6 +128,7 @@ a:active {color:white;text-decoration:none}
 /* bottom-left 255 */
 #block-nodeblock-255 {
   float:left;
+  width:280px;
   margin-top:20px;
   padding-top:10px;
   border-top:2px solid white;
@@ -140,6 +143,7 @@ a:active {color:white;text-decoration:none}
 /* bottom-right 257 */
 #block-nodeblock-257 {
   float:right;
+  width:280px;
   margin-top:20px;
   padding-top:10px;
   border-top:2px solid white;
