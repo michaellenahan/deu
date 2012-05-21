@@ -46,6 +46,15 @@ body {
 #edit-lang-dropdown-select_titletext {
   color:black;
 }
+#edit-lang-dropdown-select_msdd {
+  width:80px !important;
+}
+#edit-lang-dropdown-select_child {
+  width:80px !important;
+}
+#region-de-lang-dropdown {
+  margin-top:-6px;
+}
 /* style the language switcher */
 #block-locale-language li {
   float:right;
