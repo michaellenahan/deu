@@ -35,9 +35,9 @@ function random_filename_node_presave($node) {
     // Set title of online_magazine node to be same as digital-world product 
     // name.
     // Also, set field_swf_random_filename on the product itself.
-    if (!empty($node->field_digital_edition_product['und'])) {
+    if (!empty($node->field_digital_product['und'])) {
       $product_id = 
-        $node->field_digital_edition_product['und'][0]['product_id'];
+        $node->field_digital_product['und'][0]['product_id'];
       $query = new EntityFieldQuery;
       $query
         ->entityCondition('entity_type', 'commerce_product')
