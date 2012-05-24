@@ -107,11 +107,6 @@ function random_filename_node_presave($node) {
       $product_combo_world->field_swf_random_filename['und'][0]['value'] = $random;
       $product_combo_world->status = 1;
       entity_save('commerce_product', $product_combo_world);
-      
-      dpm($product_digital_world);
-      dpm($product_combo_uk);
-      dpm($product_combo_eu);
-      dpm($product_combo_world);
    }
     // Copy the swf file to a random filename.
     if (!empty($node->field_swf_file['und'])) {
