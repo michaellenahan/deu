@@ -1,0 +1,68 @@
+<?php
+/**
+ * Implementation of hook_form_FORM_ID_alter().
+ *
+ * Some defaults for when an online_magazine form is loaded.
+ */
+function random_filename_form_online_magazine_node_form_alter(&$form, &$form_state, $form_id) {
+  $form['title']['#default_value'] = 'Online magazine (English)';
+  $form['title']['#disabled'] = TRUE;
+  $form['field_swf_random_filename']['#disabled'] = TRUE;
+}
+
+/**
+ * Implementation of hook_form_FORM_ID_alter().
+ *
+ * Some defaults for when an online_magazine_spanish_ form is loaded.
+ */
+function random_filename_form_online_magazine_spanish__node_form_alter(&$form, &$form_state, $form_id) {
+  $form['title']['#default_value'] = 'Online magazine (Spanish)';
+  $form['title']['#disabled'] = TRUE;
+  $form['field_swf_random_filename']['#disabled'] = TRUE;
+}
+
+/**
+ * Implementation of hook_node_presave().
+ *
+ * swf files are uploaded to a private part of the filesystem.
+ * However, to serve the files using swfViewer, they need to be copied to a 
+ * public part of the filesystem, with a random filename.
+ */
+function random_filename_node_presave($node) {
+  $random = user_password(20);
+  // Act when adding a new online_magazine
+  if (($node->type == 'online_magazine' || $node->type == 'online_magazine_spanish_') && empty($node->nid)) {
+    // Set title of online_magazine node to be same as digital-world product 
+    // name.
+    // Also, set field_swf_random_filename on the product itself.
+    if (!empty($node->field_digital_edition_product['und'])) {
+      $product_id = 
+        $node->field_digital_edition_product['und'][0]['product_id'];
+      $query = new EntityFieldQuery;
+      $query
+        ->entityCondition('entity_type', 'commerce_product')
+        ->propertyCondition('product_id', $product_id);
+      $result = $query->execute();
+      $products = entity_load('commerce_product', array_keys($result['commerce_product']));
+      foreach ($products as $product) {
+        // online_magazine node title set here.
+        $node->title = $product->sku;
+        $product->field_swf_random_filename['und'][0]['value'] = $random;
+        entity_save('commerce_product', $product);
+        dpm($product);
+      }
+    }
+    // Copy the swf file to a random filename.
+    if (!empty($node->field_swf_file['und'])) {
+      $node->field_swf_random_filename['und'][0]['value'] = $random;
+      // $file is the swf file to be stored privately.
+      $file = file_load($node->field_swf_file['und'][0]['fid']);
+      // the copy with the random name will be stored in:
+      // sites/default/files/viewer/
+      // together with swfViewer.php etc.
+      $dest = 'public://viewer/' . $random . '.swf';
+      file_copy($file, $dest, FILE_EXISTS_REPLACE);
+    }
+  }
+}
+

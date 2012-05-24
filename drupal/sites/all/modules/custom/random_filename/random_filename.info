@@ -1,0 +1,5 @@
+name = Random Filename
+description = Assigns a random filename to an uploaded file.
+core = 7.x
+package = Custom
+
