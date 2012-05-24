@@ -46,10 +46,11 @@ function random_filename_node_presave($node) {
       $products = entity_load('commerce_product', array_keys($result['commerce_product']));
       // foreach not necessary, we only expect one result.
       foreach ($products as $product) {
-        // online_magazine node title set here.
-        $node->title = $product->sku;
         $double_dash_pos = strpos($product->sku, '--');
         $sku_head = substr($product->sku, 0, $double_dash_pos);
+        // online_magazine node title set here: it's the first part of the sku,
+        // e.g. de-en-999
+        $node->title = $sku_head;
       }
       
       // --digital-world product
