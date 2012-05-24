@@ -44,13 +44,75 @@ function random_filename_node_presave($node) {
         ->propertyCondition('product_id', $product_id);
       $result = $query->execute();
       $products = entity_load('commerce_product', array_keys($result['commerce_product']));
+      // foreach not necessary, we only expect one result.
       foreach ($products as $product) {
         // online_magazine node title set here.
         $node->title = $product->sku;
-        $product->field_swf_random_filename['und'][0]['value'] = $random;
-        entity_save('commerce_product', $product);
+        $double_dash_pos = strpos($product->sku, '--');
+        $sku_head = substr($product->sku, 0, $double_dash_pos);
       }
-    }
+      
+      // --digital-world product
+      // set status to 1 (so product shows on store)
+      // set field_swf_random_filename
+      $query_digital_world = new EntityFieldQuery;
+      $query_digital_world
+        ->entityCondition('entity_type', 'commerce_product')
+        ->propertyCondition('sku', $sku_head . '--digital-world');
+      $result_digital_world = $query_digital_world->execute();
+      $products_digital_world = entity_load('commerce_product', array_keys($result_digital_world['commerce_product']));
+      $product_digital_world = reset($products_digital_world);
+      $product_digital_world->field_swf_random_filename['und'][0]['value'] = $random;
+      $product_digital_world->status = 1;
+      entity_save('commerce_product', $product_digital_world);
+
+      // --combo-uk product
+      // set status to 1 (so product shows on store)
+      // set field_swf_random_filename
+      $query_combo_uk = new EntityFieldQuery;
+      $query_combo_uk
+        ->entityCondition('entity_type', 'commerce_product')
+        ->propertyCondition('sku', $sku_head . '--combo-uk');
+      $result_combo_uk = $query_combo_uk->execute();
+      $products_combo_uk = entity_load('commerce_product', array_keys($result_combo_uk['commerce_product']));
+      $product_combo_uk = reset($products_combo_uk);
+      $product_combo_uk->field_swf_random_filename['und'][0]['value'] = $random;
+      $product_combo_uk->status = 1;
+      entity_save('commerce_product', $product_combo_uk);
+
+      // --combo-eu product
+      // set status to 1 (so product shows on store)
+      // set field_swf_random_filename
+      $query_combo_eu = new EntityFieldQuery;
+      $query_combo_eu
+        ->entityCondition('entity_type', 'commerce_product')
+        ->propertyCondition('sku', $sku_head . '--combo-eu');
+      $result_combo_eu = $query_combo_eu->execute();
+      $products_combo_eu = entity_load('commerce_product', array_keys($result_combo_eu['commerce_product']));
+      $product_combo_eu = reset($products_combo_eu);
+      $product_combo_eu->field_swf_random_filename['und'][0]['value'] = $random;
+      $product_combo_eu->status = 1;
+      entity_save('commerce_product', $product_combo_eu);
+
+      // --combo-world product
+      // set status to 1 (so product shows on store)
+      // set field_swf_random_filename
+      $query_combo_world = new EntityFieldQuery;
+      $query_combo_world
+        ->entityCondition('entity_type', 'commerce_product')
+        ->propertyCondition('sku', $sku_head . '--combo-world');
+      $result_combo_world = $query_combo_world->execute();
+      $products_combo_world = entity_load('commerce_product', array_keys($result_combo_world['commerce_product']));
+      $product_combo_world = reset($products_combo_world);
+      $product_combo_world->field_swf_random_filename['und'][0]['value'] = $random;
+      $product_combo_world->status = 1;
+      entity_save('commerce_product', $product_combo_world);
+      
+      dpm($product_digital_world);
+      dpm($product_combo_uk);
+      dpm($product_combo_eu);
+      dpm($product_combo_world);
+   }
     // Copy the swf file to a random filename.
     if (!empty($node->field_swf_file['und'])) {
       $node->field_swf_random_filename['und'][0]['value'] = $random;
