@@ -49,7 +49,6 @@ function random_filename_node_presave($node) {
         $node->title = $product->sku;
         $product->field_swf_random_filename['und'][0]['value'] = $random;
         entity_save('commerce_product', $product);
-        dpm($product);
       }
     }
     // Copy the swf file to a random filename.
