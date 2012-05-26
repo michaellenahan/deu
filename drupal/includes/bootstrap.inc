@@ -1704,9 +1704,11 @@ function watchdog($type, $message, $variables = array(), $severity = WATCHDOG_NO
 
   //DEBUG
   //lullabot.com/articles/quick-and-dirty-debugging
+  /*
   if ($type == 'php') {
     $message .= '<pre>'. print_r(debug_backtrace(), 1) .'</pre>';
   }
+   */
   //END DEBUG
 
   static $in_error_state = FALSE;
