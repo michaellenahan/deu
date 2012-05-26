@@ -1702,6 +1702,13 @@ function watchdog_exception($type, Exception $exception, $message = NULL, $varia
 function watchdog($type, $message, $variables = array(), $severity = WATCHDOG_NOTICE, $link = NULL) {
   global $user, $base_root;
 
+  //DEBUG
+  //lullabot.com/articles/quick-and-dirty-debugging
+  if ($type == 'php') {
+    $message .= '<pre>'. print_r(debug_backtrace(), 1) .'</pre'
+  }
+  //END DEBUG
+
   static $in_error_state = FALSE;
 
   // It is possible that the error handling will itself trigger an error. In that case, we could
