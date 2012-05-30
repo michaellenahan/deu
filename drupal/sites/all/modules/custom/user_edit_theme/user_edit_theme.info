@@ -1,0 +1,5 @@
+name = User edit theme
+description = (Custom) Allows us to use a non-admin theme for user/#/edit.
+core = 7.x
+package = Custom
+
