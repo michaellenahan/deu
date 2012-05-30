@@ -3,6 +3,9 @@
  * Implementation of hook_admin_paths_alter().
  */
 function user_edit_theme_admin_paths_alter(&$paths) {
+  // With thanks to lucor:
+  // http://drupal.org/node/1256788
   // Treat this path as not administrative.
   $paths['user/*/edit'] = FALSE;
 }
+
