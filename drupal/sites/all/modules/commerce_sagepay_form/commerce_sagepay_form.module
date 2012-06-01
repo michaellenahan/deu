@@ -475,6 +475,14 @@ function _commerce_sagepay_form_encrypted_order($settings, $order, $total, $addr
     
   );
 
+  // Fix for Sagepay error with US addresses.
+  // Status:	MALFORMED
+  // Status Detail:	3147 : The BillingState field is required.
+  if ($address['country'] == 'US') {
+    $query['BillingState'] = $address['administrative_area']; 
+    $query['DeliveryState'] = $address['administrative_area']; 
+  }
+
   $keys = array_keys($query);
   $query_string = '';
   foreach($keys as $key){
