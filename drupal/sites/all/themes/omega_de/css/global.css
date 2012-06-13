@@ -40,26 +40,28 @@ body {
 .front aside .grid-3 {
   width:280px;
 }
-/* language switcher dropdown
- * comes from lang_dropdown module
+
+/* 2012-06-13 
+ * now using standard language switcher instead of lang_dropdown
  */
-#edit-lang-dropdown-select_titletext {
-  color:black;
-}
-#edit-lang-dropdown-select_msdd {
-  width:80px !important;
-}
-#edit-lang-dropdown-select_child {
-  width:80px !important;
-}
-#region-de-lang-dropdown {
-  margin-top:-6px;
-}
-/* style the language switcher */
 #block-locale-language li {
-  float:right;
   list-style:none;
 }
+#block-locale-language li .active {
+  display:none;
+}
+#block-locale-language {
+  margin-top:8px;
+  font-weight:bold;
+  text-align:right;
+}
+#block-locale-language a {
+  margin-right:-20px;
+}
+.front #block-locale-language a {
+  margin-right:0px;
+}
+
 /* space after each item in view-latest-issues */
 div.view-latest-issues .field-content {
   padding-bottom:20px;
