@@ -1,0 +1,4 @@
+name = Redirect domain
+description = (Custom) Works in conjunction with nginx configuration to ensure domains are redirected to correct danceeurope.net location.
+package = Custom
+core = 7.x
