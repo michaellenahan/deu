@@ -483,6 +483,16 @@ function _commerce_sagepay_form_encrypted_order($settings, $order, $total, $addr
     $query['DeliveryState'] = $address['administrative_area']; 
   }
 
+  // Fix for Sagepay error with addresses in Ireland.
+  // Status: 	MALFORMED
+  // Status Detail: 	3090 : The BillingPostCode is required.
+  // These addresses don't have a postcode, but Sagepay needs a (dummy) 
+  // postcode.
+  if ($address['country'] == 'IE') {
+    $query['BillingPostcode'] = '0000';
+    $query['DeliveryPostcode'] = '0000';
+  }
+
   $keys = array_keys($query);
   $query_string = '';
   foreach($keys as $key){
