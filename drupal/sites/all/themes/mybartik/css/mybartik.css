@@ -12,6 +12,7 @@
 
 .node-product-display .field-name-field-image img {
   float:right;
+  margin-left:20px;
 }
 
 /* Remove items from main menu display */
