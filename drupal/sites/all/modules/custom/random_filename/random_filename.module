@@ -5,7 +5,21 @@
  * Some defaults for when an online_magazine form is loaded.
  */
 function random_filename_form_online_magazine_node_form_alter(&$form, &$form_state, $form_id) {
-  $form['title']['#default_value'] = 'Online magazine (English)';
+  if (empty($form['nid']['#value'])) {
+    $form['title']['#default_value'] = 'Online magazine (English)';
+  }
+  else {
+    // This is a little utility to make all online magazine nodes have similar
+    // titles. In each case the title should be $sku_head, e.g. de-en-166
+    $form_title = $form['title']['#default_value'];
+    $double_dash_pos = strpos($form_title, '--');
+    if ($double_dash_pos > 0) {
+      $sku_head = substr($form_title, 0, $double_dash_pos);
+      // online_magazine node title set here: it's the first part of the sku,
+      // e.g. de-en-999
+      $form['title']['#default_value'] = $sku_head;
+    }
+  }
   $form['title']['#disabled'] = TRUE;
   $form['field_swf_random_filename']['#disabled'] = TRUE;
 }
@@ -16,7 +30,21 @@ function random_filename_form_online_magazine_node_form_alter(&$form, &$form_sta
  * Some defaults for when an online_magazine_spanish_ form is loaded.
  */
 function random_filename_form_online_magazine_spanish__node_form_alter(&$form, &$form_state, $form_id) {
-  $form['title']['#default_value'] = 'Online magazine (Spanish)';
+  if (empty($form['nid']['#value'])) {
+    $form['title']['#default_value'] = 'Online magazine (Spanish)';
+  }
+  else {
+    // This is a little utility to make all online magazine nodes have similar
+    // titles. In each case the title should be $sku_head, e.g. de-en-166
+    $form_title = $form['title']['#default_value'];
+    $double_dash_pos = strpos($form_title, '--');
+    if ($double_dash_pos > 0) {
+      $sku_head = substr($form_title, 0, $double_dash_pos);
+      // online_magazine node title set here: it's the first part of the sku,
+      // e.g. de-en-999
+      $form['title']['#default_value'] = $sku_head;
+    }
+  }
   $form['title']['#disabled'] = TRUE;
   $form['field_swf_random_filename']['#disabled'] = TRUE;
 }
@@ -123,3 +151,70 @@ function random_filename_node_presave($node) {
   }
 }
 
+/**
+ * Implementation of hook_node_access().
+ */
+function random_filename_node_access($node, $op, $account) {
+  // NOTE: this hook does not run unless the user has at least 
+  // 'View published content' rights.
+  // I want to deny authenticated users rights to any content
+  // except their own files.
+  // See these lines in node.module:
+  // if (!user_access('access content', $account)) {
+  //   $rights[$account->uid][$cid][$op] = FALSE;
+  //   return FALSE;
+  // }  
+  $type = is_string($node) ? $node : $node->type;
+  $uid = $account->uid;
+  // user must be authenticated to see anything.
+  if ($uid > 0) {
+    if (($type == 'online_magazine') || ($type == 'online_magazine_spanish_')) {
+      if (isset($node->field_pdf_magazine['und'])) {
+        // pdf for iPad only
+        $http_user_agent = $_SERVER['HTTP_USER_AGENT'];
+        //
+        watchdog('random_filename', 'online magazine access attempt');
+        watchdog('random_filename', "uid: {$uid}");
+        watchdog('random_filename', "nid: {$node->nid}");
+        watchdog('random_filename', "node title: {$node->title}");
+        watchdog('random_filename', "http_user_agent: $http_user_agent");
+        //
+        if (!(bool) strpos($_SERVER['HTTP_USER_AGENT'],'iPad')) {
+          return NODE_ACCESS_DENY;
+        }
+        //
+        $sku_head = $node->title;
+        // we want the first part of the sku, e.g. de-en-999
+        $double_dash_pos = strpos($sku_head, '--');
+        if ($double_dash_pos > 0) {
+          $sku_head = substr($node_title, 0, $double_dash_pos);
+        }
+        $sku_head_combo   = $sku_head.'--combo%';
+        $sku_head_digital = $sku_head.'--digital%';
+
+        // Did the user purchase the digital edition referenced by this 
+        // node?
+        $query = "
+          SELECT commerce_order.uid
+          FROM commerce_order
+          JOIN commerce_line_item
+          ON commerce_line_item.order_id = commerce_order.order_id
+          WHERE commerce_order.uid = :uid
+          AND commerce_order.status = 'pending'
+          AND (commerce_line_item.line_item_label LIKE :sku_head_combo 
+          OR commerce_line_item.line_item_label LIKE :sku_head_digital)  
+          ";
+        $parameters = array(
+          // ':uid' => $uid,
+          ':uid' => 33,
+          ':sku_head_combo' => $sku_head_combo,
+          ':sku_head_digital' => $sku_head_digital,
+        );
+        $result = db_query($query, $parameters)->fetchField();
+        if (!$result) {
+          return NODE_ACCESS_DENY;
+        }
+      }
+    }
+  }
+}
