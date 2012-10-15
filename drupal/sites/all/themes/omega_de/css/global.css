@@ -231,7 +231,7 @@ a:active {color:white;text-decoration:none}
   display:none;
 }
 
-.video-block {
+.video-block iframe {
   margin-top:20px;
   padding-top:10px;
   border-top:2px solid white;
