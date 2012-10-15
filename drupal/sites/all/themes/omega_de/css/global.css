@@ -62,6 +62,13 @@ body {
   margin-right:0px;
 }
 
+/* poor man's language switcher */
+.block-6 {
+  text-align:right;
+  font-weight:bold;
+  margin-top:7px;
+}
+
 /* space after each item in view-latest-issues */
 div.view-latest-issues .field-content {
   padding-bottom:20px;
@@ -164,5 +171,69 @@ a:active {color:white;text-decoration:none}
 }
 /* hide translation link */
 #block-nodeblock-257 ul.links {
+  display:none;
+}
+
+/* picturebox-5 418 */
+#block-nodeblock-418 {
+  float:left;
+  width:280px;
+  margin-top:20px;
+  padding-top:10px;
+  border-top:2px solid white;
+}
+#block-nodeblock-418 .block-title {
+  display:none;
+}
+/* hide translation link */
+#block-nodeblock-418 ul.links {
+  display:none;
+}
+
+/* picturebox-6 419 */
+#block-nodeblock-419 {
+  float:right;
+  width:280px;
+  margin-top:20px;
+  padding-top:10px;
+  border-top:2px solid white;
+}
+#block-nodeblock-419 .block-title {
+  display:none;
+}
+/* hide translation link */
+#block-nodeblock-419 ul.links {
+  display:none;
+}
+
+/* picturebox-7 420 */
+#block-nodeblock-420 {
+  float:left;
+  width:280px;
+  margin-top:20px;
+  padding-top:10px;
+  border-top:2px solid white;
+}
+#block-nodeblock-420 .block-title {
+  display:none;
+}
+/* hide translation link */
+#block-nodeblock-420 ul.links {
+  display:none;
+}
+
+/* picturebox-8 421 */
+#block-nodeblock-421 {
+  float:right;
+  width:280px;
+  margin-top:20px;
+  padding-top:10px;
+  border-top:2px solid white;
+}
+#block-nodeblock-421 .block-title {
+  display:none;
+}
+/* hide translation link */
+#block-nodeblock-421 ul.links {
   display:none;
 }
