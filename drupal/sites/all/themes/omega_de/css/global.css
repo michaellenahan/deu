@@ -237,3 +237,7 @@ a:active {color:white;text-decoration:none}
   border-top:2px solid white;
 }
 
+.video-block .block-title {
+  display:none;
+}
+
