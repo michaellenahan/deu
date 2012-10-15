@@ -62,13 +62,6 @@ body {
   margin-right:0px;
 }
 
-/* poor man's language switcher */
-.block-6 {
-  text-align:right;
-  font-weight:bold;
-  margin-top:7px;
-}
-
 /* space after each item in view-latest-issues */
 div.view-latest-issues .field-content {
   padding-bottom:20px;
@@ -237,3 +230,5 @@ a:active {color:white;text-decoration:none}
 #block-nodeblock-421 ul.links {
   display:none;
 }
+
+
