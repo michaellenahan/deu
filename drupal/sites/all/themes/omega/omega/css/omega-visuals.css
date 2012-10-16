@@ -183,7 +183,9 @@ tr.odd td.active {
 tr:hover td,
 tr.even:hover td.active,
 tr.odd:hover td.active {
-  background: #FFFEEE;
+  /* background: #FFFEEE; */
+  /* ML 2012-10-16 can't get override to work */
+  background: #231F20;
 }
 
 td ul.links {
