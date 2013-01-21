@@ -1,0 +1,52 @@
+<?php
+/**
+ * @file commerce_shipping_text.module
+ * We are using commerce_shipping solely to provide shipping address fields.
+ *
+ * The default text provided by commerce_shipping on the checkout pane is not
+ * helpful: 'No shipping rates found for your order. Please continue the 
+ * checkout process.'
+ *
+ * This module simply provides more useful text for the Dance Europe website.
+ *
+ * Ideally we would suppress the shipping page entirely, but this appears to 
+ * be quite difficult: http://drupal.org/node/1518034
+ */
+
+/**
+ * Implements hook_form_alter().
+ */
+function commerce_shipping_text_form_alter(&$form, &$form_state, $form_id) {
+  if ($form_id == 'commerce_checkout_form_shipping') {
+    $title = 'Postal charges';
+    $message = '<div>If choosing the
+      print edition, or the print/digital combination: please ensure you have 
+      chosen the correct postal delivery option - UK, Europe, or 
+      Worldwide.</div>';
+
+    global $language;
+    switch ($language->language) {
+      case 'es':
+        $title = 'Entrega Postal';
+        $message = 'Para adquirir ediciones impresas, por favor asegúrese de que ha seleccionado la región correcta de entre el menu de Entrega Postal - Reino Unido, Europa o Resto del Mundo - para su dirección antes de proceder a la compra.';
+        break;
+    }
+
+    $form['commerce_shipping']['#title'] = $title;
+    $form['commerce_shipping']['message']['#markup'] = $message;
+  }
+}
+
+/**
+ * Implements hook_commerce_checkout_page_info().
+ */
+function commerce_shipping_commerce_checkout_page_info() {
+  $checkout_pages = array();
+
+  $checkout_pages['shipping'] = array(
+    'title' => t('Shipping'),
+    'weight' => 5,
+  );
+
+  return $checkout_pages;
+}

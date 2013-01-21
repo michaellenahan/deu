@@ -1,0 +1,5 @@
+name = Commerce Shipping Text
+description = Alters text on the shipping page of the checkout.
+dependencies[] = commerce_shipping
+package = custom
+core = 7.x
