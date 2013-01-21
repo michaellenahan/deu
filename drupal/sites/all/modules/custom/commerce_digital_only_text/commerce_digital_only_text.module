@@ -1,6 +1,7 @@
 <?php
 /**
- * @file commerce_digital_only_text.module
+ * @file
+ * commerce_digital_only_text.module
  * Fixes an issue with /store page where the product options dropdown doesn't 
  * show if printed editions are disabled.
  */
@@ -21,9 +22,10 @@ function commerce_digital_only_text_help($path, $arg) {
  */
 function commerce_digital_only_text_form_alter(&$form, &$form_state, $form_id) {
   if (strpos($form_id, 'commerce_cart_add_to_cart_form') === 0) {
+    // Este número sólo está disponible en edición digital.
     $message = t('This issue is available as digital edition only.');
 
-    // if the attributes element of the array is missing, we know that the
+    // If the attributes element of the array is missing, we know that the
     // dropdown list will be missing on the screen.
     if (!isset($form['attributes'])) {
       $form['commerce_digital_only_text'] = array(
@@ -32,4 +34,3 @@ function commerce_digital_only_text_form_alter(&$form, &$form_state, $form_id) {
     }
   }
 }
-
