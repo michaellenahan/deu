@@ -1,0 +1,6 @@
+name = Commerce digital only text
+description = Shows text when print edition no longer available
+dependencies[] = commerce
+package = custom
+core = 7.x
+
